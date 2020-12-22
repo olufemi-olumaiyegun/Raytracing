@@ -1,22 +1,17 @@
-from functions import Color,vector,image
+from functions import color,vector,image,sphere,point,ray,scene,Engine_Render
 
 def main():
-    WIDTH = 3
-    HEIGHT = 2
-    Image = image(WIDTH,HEIGHT)
-    red = Color(x=1,y=0,z=0)
-    green = Color(x=0,y=1,z=0)
-    blue = Color(x=0,y=0,z=1)
-    Image.set_pixel(0,0,red)
-    Image.set_pixel(1,0,green)
-    Image.set_pixel(2,0,blue)
+    WIDTH = 320
+    HEIGHT = 200
+    camera = vector(0,0,-1)
+    objects = [sphere(point(0,0,0),0.5, color.from_hex("#FF0000"))]
+    the_scene = scene(camera, objects, WIDTH, HEIGHT)
+    rendering_engine= Engine_Render()
+    Image = rendering_engine.renderNow(the_scene)
 
-    Image.set_pixel(0,1,red+blue)
-    Image.set_pixel(1,1,red+blue+green)
-    Image.set_pixel(2, 1, red * 0.001)
-
-    myfile = open("image.ppm","w+")
-    Image.create_file_ppm(myfile)
+    with open("image.ppm","w") as myfile:
+        Image.create_file_ppm(myfile)
+    myfile.close()
 
 
 
