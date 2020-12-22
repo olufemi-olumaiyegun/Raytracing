@@ -76,14 +76,19 @@ class sphere:
             if distance > 0:
                 return distance
         return None
+    def normal(self, Point):
+        """Returns the surface normal to the point on obejct's surface"""
+        return(Point-self.center).normalize()
+
 
 class scene:
     """A container of the sphere, rays and actions taking place"""
-    def __init__(self,camera,objects,width,height):
+    def __init__(self,camera,objects,lights, width,height):
         self.camera = camera
         self.objects = objects
         self.width = width
         self.height = height
+        self.lights = lights
 
 
 class ray:
@@ -111,8 +116,28 @@ class image:
                 img_file.write("{} {} {} ".format(to_bytes(color.x),to_bytes(color.y),to_bytes(color.z)))
                 img_file.write("\n")
 
+class light:
+    """This is the point where a light source shines a ray on the sphere"""
+    def __init__(self, hit_position,Color=color.from_hex("#FFFFFF")):
+        self.hit_position = hit_position
+        self.Color = Color        
+
+class material:
+    """possesses properties and colors which dictate how the sphere reacts to light"""
+    def __init__(self, Color=color.from_hex("#FFFFFF"), ambience = 0.05, diffusion = 1.0, specularity = 1.0):
+        self.Color = Color
+        self.diffusion = diffusion
+        self.specularity = specularity
+        self.ambience = ambience
+
+    def color_at(self, position):
+        return self.Color
+
+
+
 
 class Engine_Render:
+    """This class performs rendering operations(i.e it actually constructs the scene)"""
     def renderNow(self,Scene):
         width = Scene.width
         height = Scene.height
@@ -145,7 +170,8 @@ class Engine_Render:
         if object_hit is None:
             return Color
         hit_position = Ray.origin + Ray.direction * distance_hit
-        Color+=self.color_at(object_hit, hit_position, Scene) 
+        normal_hit = object_hit.normal(hit_position)
+        Color+=self.color_at(object_hit, hit_position, normal_hit, Scene) 
         return Color
     def nearest(self,Ray,Scene):
         distance_minimu = None
@@ -161,8 +187,26 @@ class Engine_Render:
 
 
 
-    def color_at(self, object_hit, hit_position, Scene):
-            return object_hit.material
+    def color_at(self, object_hit, hit_position, normal, Scene):
+        material = object_hit.material
+        object_color = material.color_at(hit_position)
+        pushToCam = Scene.camera - hit_position
+        Color = material.ambience * color.from_hex("#000000")
+        specularityK = 50
+        #calculate light behavior
+
+        for Light in Scene.lights:
+            pushLight = ray(hit_position, Light.hit_position - hit_position)
+
+            #create diffusion
+            Color+=object_color * material.diffusion * max(normal.dot_product(pushLight.direction),0)
+
+            #shade specularity
+
+            vector_reduced = (pushLight.direction + pushToCam).normalize()
+            Color+=(Light.Color * material.specularity * max(normal.dot_product(vector_reduced),0) ** specularityK)
+        return Color
+        
 
 
 
