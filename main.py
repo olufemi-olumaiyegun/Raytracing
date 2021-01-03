@@ -1,24 +1,27 @@
-from functions import Color,vector,image
+import importlib
+from functions import scene, Engine_Render
+import os
+
+
+
 
 def main():
-    WIDTH = 3
-    HEIGHT = 2
-    Image = image(WIDTH,HEIGHT)
-    red = Color(x=1,y=0,z=0)
-    green = Color(x=0,y=1,z=0)
-    blue = Color(x=0,y=0,z=1)
-    Image.set_pixel(0,0,red)
-    Image.set_pixel(1,0,green)
-    Image.set_pixel(2,0,blue)
+   
+    mod = importlib.import_module("balls")
 
-    Image.set_pixel(0,1,red+blue)
-    Image.set_pixel(1,1,red+blue+green)
-    Image.set_pixel(2, 1, red * 0.001)
+    render = Engine_Render()
+    the_scene = scene(mod.CAMERA, mod.OBJECTS, mod.LIGHTS, mod.WIDTH, mod.HEIGHT)
 
-    myfile = open("image.ppm","w+")
-    Image.create_file_ppm(myfile)
+    Image = render.renderNow(the_scene)
+
+
+    os.chdir(os.path.dirname(os.path.abspath(mod.__file__)))
+    with open("2balls.jpg","w") as myfile:
+        Image.create_file_ppm(myfile)
+    myfile.close()
 
 
 
 if __name__ == "__main__":
     main()
+    
